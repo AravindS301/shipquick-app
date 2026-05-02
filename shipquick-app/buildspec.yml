@@ -1,0 +1,36 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing dependencies"
+      - cd shipquick-app/backend || cd backend
+      - npm install
+      - cd -
+
+  pre_build:
+    commands:
+      - echo "Logging in to ECR"
+      - AWS_ACCOUNT_ID=575126609591
+      - AWS_REGION=ap-south-1
+      - IMAGE_TAG=codebuild-$CODEBUILD_BUILD_NUMBER
+      - ECR_URL=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URL
+
+  build:
+    commands:
+      - echo "Running backend test"
+      - cd backend
+      - npm test
+      - cd ..
+      - echo "Building Docker images"
+      - docker build -t shipquick-backend:$IMAGE_TAG backend
+      - docker build -t shipquick-frontend:$IMAGE_TAG frontend
+
+  post_build:
+    commands:
+      - echo "Pushing images to ECR"
+      - docker tag shipquick-backend:$IMAGE_TAG $ECR_URL/shipquick-backend:$IMAGE_TAG
+      - docker tag shipquick-frontend:$IMAGE_TAG $ECR_URL/shipquick-frontend:$IMAGE_TAG
+      - docker push $ECR_URL/shipquick-backend:$IMAGE_TAG
+      - docker push $ECR_URL/shipquick-frontend:$IMAGE_TAG
