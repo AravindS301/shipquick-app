@@ -19,7 +19,7 @@ pipeline {
 
         stage('Backend Test') {
             steps {
-                dir('shipquick-app/ackend') {
+                dir('shipquick-app/backend') {
                     sh 'npm install'
                     sh 'npm test'
                 }
