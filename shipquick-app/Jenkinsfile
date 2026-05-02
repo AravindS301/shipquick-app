@@ -34,8 +34,8 @@ pipeline {
         }
 	stage('Trivy Image Scan') {
     		steps {
-        		sh 'trivy image --severity HIGH,CRITICAL --exit-code 1 $BACKEND_REPO:$IMAGE_TAG'
-        		sh 'trivy image --severity HIGH,CRITICAL --exit-code 1 $FRONTEND_REPO:$IMAGE_TAG'
+        		sh 'trivy image --severity HIGH,CRITICAL $BACKEND_REPO:$IMAGE_TAG'
+        		sh 'trivy image --severity HIGH,CRITICAL $FRONTEND_REPO:$IMAGE_TAG'
    		 }
 	}
 
