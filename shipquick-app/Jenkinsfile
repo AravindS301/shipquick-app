@@ -55,23 +55,33 @@ pipeline {
             }
         }
 	stage('Update GitOps Repo') {
-    		steps {
-        		sh '''
-        		rm -rf shipquick-gitops
-        		git clone https://github.com/AravindS301/shipquick-gitops.git
-        		cd shipquick-gitops
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'github-creds',
+            usernameVariable: 'GIT_USER',
+            passwordVariable: 'GIT_TOKEN'
+        )]) {
+            sh '''
+            rm -rf shipquick-gitops
 
-        		sed -i "s|image: .*shipquick-backend.*|image: $BACKEND_REPO:$IMAGE_TAG|" shipquick-gitops/k8s/backend-deployment.yaml
-        		sed -i "s|image: .*shipquick-frontend.*|image: $FRONTEND_REPO:$IMAGE_TAG|" shipquick-gitops/k8s/frontend-deployment.yaml
+            git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/AravindS301/shipquick-gitops.git
 
-        		git config user.email "jenkins@example.com"
-        		git config user.name "jenkins"
+            cd shipquick-gitops
 
-        		git add .
-        		git commit -m "Update image to $IMAGE_TAG" || echo "No change"
-        		git push
-        		'''
-    		}
-	}
+            sed -i "s|image: .*shipquick-backend.*|image: ${ECR_URL}/${BACKEND_REPO}:${IMAGE_TAG}|" shipquick-gitops/k8s/backend-deployment.yaml
+
+            sed -i "s|image: .*shipquick-frontend.*|image: ${ECR_URL}/${FRONTEND_REPO}:${IMAGE_TAG}|" shipquick-gitops/k8s/frontend-deployment.yaml
+
+            git config user.email "jenkins@example.com"
+            git config user.name "jenkins"
+
+            git add .
+            git commit -m "Update image tag to ${IMAGE_TAG}" || echo "No changes"
+
+            git push
+            '''
+        }
+    }
+}
     }
 }
